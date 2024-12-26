@@ -1,0 +1,49 @@
+type AccessControl = variant {
+  Conditional : record { condition_data : text; condition_type : text };
+  Private : record { allowed_viewers : vec text };
+  Public;
+};
+type CapsuleContent = variant {
+  MultipartMessage : record { title : text; parts : vec CapsuleContent };
+  Text : text;
+  MediaReference : record { ipfs_hash : text; media_type : text };
+  EncryptedMessage : record { content : vec nat8; public_key : text };
+};
+type CapsuleMetadata = record {
+  title : text;
+  cultural_significance : opt text;
+  tags : vec text;
+  description : text;
+  location : opt GeoLocation;
+};
+type CapsuleStatus = variant { Unlocked; Sealed; UnlockPending; Archived };
+type CreateCapsulePayload = record {
+  content : CapsuleContent;
+  unlock_date : nat64;
+  metadata : CapsuleMetadata;
+  access_control : AccessControl;
+};
+type GeoLocation = record {
+  latitude : float64;
+  longitude : float64;
+  location_name : text;
+};
+type Result = variant { Ok : TimeCapsule; Err : text };
+type TimeCapsule = record {
+  id : nat64;
+  status : CapsuleStatus;
+  creator : text;
+  content : CapsuleContent;
+  unlock_date : nat64;
+  metadata : CapsuleMetadata;
+  access_control : AccessControl;
+  creation_date : nat64;
+};
+service : {
+  create_time_capsule : (CreateCapsulePayload) -> (Result);
+  get_capsule : (nat64) -> (Result) query;
+  get_capsules_by_location : (float64, float64, float64) -> (
+      vec TimeCapsule,
+    ) query;
+  get_public_capsules : () -> (vec TimeCapsule) query;
+}
